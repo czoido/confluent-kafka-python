@@ -1,24 +1,77 @@
-name: Build wheels
+name: Build and test
 
 on:
   push:
   pull_request:
   workflow_dispatch:
-  release:
-    types: [published]
 
 jobs:
+  # ── Lint & style ──────────────────────────────────────────────────────────
+  lint:
+    name: Lint & style (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install lint deps
+        run: pip install flake8 "black>=24" "isort>=5.13" mypy
+
+      - name: flake8
+        run: flake8 src/ tests/ --max-line-length=120 --extend-ignore=E203,W503 --exclude='*_pb2.py'
+
+      - name: black
+        run: black --check --line-length=120 src/ tests/ --exclude='_pb2\.py'
+
+      - name: isort
+        run: isort --check-only --profile=black --line-length=120 src/ tests/ --skip-glob='*_pb2.py'
+
+  # ── Unit tests (mirrors Semaphore "Source package verification") ──────────
+  unit_tests:
+    name: Unit tests (Python ${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.9", "3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Build and install wheel
+        run: |
+          pip install build
+          python -m build --wheel
+          pip install dist/*.whl
+
+      - name: Run unit tests
+        run: |
+          pip install pytest pytest-asyncio pytest-timeout
+          pytest tests/test_error.py -v
+
+  # ── Wheel builds (mirrors Semaphore "Wheels: <platform>") ─────────────────
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
+    name: Wheels · ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-latest    # Linux x86_64
-          - macos-13         # macOS x86_64
-          - macos-latest     # macOS arm64 (M1)
-          - windows-latest   # Windows x86_64
+          - ubuntu-latest   # Linux x86_64 + arm64 (QEMU)
+          - macos-13        # macOS x86_64
+          - macos-latest    # macOS arm64 (M-series)
+          - windows-latest  # Windows x86_64
 
     steps:
       - uses: actions/checkout@v4
@@ -27,27 +80,28 @@ jobs:
         with:
           python-version: "3.11"
 
-      # Enable QEMU for Linux arm64 cross-compilation
-      - name: Set up QEMU
+      - name: Set up QEMU (Linux arm64 via emulation)
         if: runner.os == 'Linux'
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64
 
       - name: Install cibuildwheel
-        run: pip install cibuildwheel==2.22.*
+        run: pip install "cibuildwheel==2.22.*"
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload wheels artifact
+        uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ matrix.os }}
           path: ./wheelhouse/*.whl
           if-no-files-found: error
 
+  # ── Source distribution ───────────────────────────────────────────────────
   build_sdist:
-    name: Build source distribution
+    name: Source distribution
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -56,42 +110,43 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install build deps
-        run: pip install build conan
-
-      - name: Detect conan profile
-        run: conan profile detect --force
-
       - name: Build sdist
-        run: python -m build --sdist --no-isolation
+        run: |
+          pip install build
+          python -m build --sdist
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload sdist artifact
+        uses: actions/upload-artifact@v4
         with:
           name: sdist
           path: dist/*.tar.gz
           if-no-files-found: error
 
-  publish:
-    name: Publish to PyPI
+  # ── Package all artifacts (mirrors Semaphore "Packaging") ─────────────────
+  package:
+    name: Package all artifacts
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' && github.event.action == 'published'
-    environment:
-      name: pypi
-      url: https://pypi.org/p/confluent-kafka
-    permissions:
-      id-token: write
-
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Download all wheels
+        uses: actions/download-artifact@v4
         with:
           pattern: wheels-*
           merge-multiple: true
           path: dist/
 
-      - uses: actions/download-artifact@v4
+      - name: Download sdist
+        uses: actions/download-artifact@v4
         with:
           name: sdist
           path: dist/
 
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - name: List artifacts
+        run: ls -lh dist/
+
+      - name: Upload combined artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-packages
+          path: dist/
+          if-no-files-found: error
