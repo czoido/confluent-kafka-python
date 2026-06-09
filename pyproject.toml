@@ -251,9 +251,8 @@ packages = ["src/confluent_kafka"]
 exclude = [".semaphore", ".github/workflows"]
 
 [tool.cibuildwheel]
-build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
+build = "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
 skip = ["*-musllinux*", "*-manylinux_i686", "*-win32"]
-# Install conan and detect default profile before each wheel build
 test-requires = ["pytest"]
 test-command = "pytest {project}/tests/test_wheel.py -v"
 
@@ -263,11 +262,12 @@ manylinux-aarch64-image = "manylinux_2_28"
 repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.macos]
-# Clear the Python3_ROOT_DIR that actions/setup-python sets to the runner's default
-# Python (e.g. 3.11) so CMake finds the cp39/cp310/… interpreter that cibuildwheel
-# prepared instead. On Linux (Docker) these vars are never inherited.
-environment = { MACOSX_DEPLOYMENT_TARGET = "11.0", Python3_ROOT_DIR = "", Python_ROOT_DIR = "", Python2_ROOT_DIR = "" }
-repair-wheel-command = "MACOSX_DEPLOYMENT_TARGET=11.0 delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}"
+archs = ["arm64", "x86_64"]
+# Clear Python3_ROOT_DIR set by actions/setup-python so CMake finds the right per-version interpreter.
+# Deployment target and arch are controlled by profiles/macos-cross.jinja via ARCHFLAGS.
+environment = { Python3_ROOT_DIR = "", Python_ROOT_DIR = "", Python2_ROOT_DIR = "" }
+repair-wheel-command = "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}"
+config-settings = {"host-profile" = "profiles/macos-cross.jinja"}
 
 [tool.cibuildwheel.windows]
 before-all = "pip install delvewheel"
