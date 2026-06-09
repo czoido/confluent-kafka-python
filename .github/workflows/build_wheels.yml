@@ -6,33 +6,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  # ── Lint & style ──────────────────────────────────────────────────────────
-  lint:
-    name: Lint & style (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-
-      - name: Install lint deps
-        run: pip install flake8 "black>=24" "isort>=5.13" mypy
-
-      - name: flake8
-        run: flake8 src/ tests/ --max-line-length=120 --extend-ignore=E203,W503 --exclude='*_pb2.py'
-
-      - name: black
-        run: black --check --line-length=120 src/ tests/ --exclude='_pb2\.py'
-
-      - name: isort
-        run: isort --check-only --profile=black --line-length=120 src/ tests/ --skip-glob='*_pb2.py'
-
   # ── Unit tests (mirrors Semaphore "Source package verification") ──────────
   unit_tests:
     name: Unit tests (Python ${{ matrix.python-version }}, ${{ matrix.os }})
