@@ -1,4 +1,4 @@
-{% set archflags = os.environ.get('ARCHFLAGS', '') %}
+{% set archflags = os.getenv('ARCHFLAGS', '') %}
 {% set is_x86 = 'x86_64' in archflags %}
 {% set conan_arch = 'x86_64' if is_x86 else 'armv8' %}
 {% set macos_min = '10.9' if is_x86 else '11.0' %}
@@ -10,5 +10,4 @@ os.version={{ macos_min }}
 
 [buildenv]
 WHEEL_ARCH=macosx_{{ macos_min | replace('.', '_') }}_{{ 'x86_64' if is_x86 else 'arm64' }}
-CMAKE_OSX_ARCHITECTURES={{ 'x86_64' if is_x86 else 'arm64' }}
 MACOSX_DEPLOYMENT_TARGET={{ macos_min }}
