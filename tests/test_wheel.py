@@ -5,7 +5,7 @@ from confluent_kafka import Producer
 
 
 def test_version():
-    v, _, _ = confluent_kafka.version()
+    v, _ = confluent_kafka.version()
     print(f"version: {v}")
     assert v
 
