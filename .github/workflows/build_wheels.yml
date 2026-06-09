@@ -49,11 +49,19 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Build and install wheel
+      - name: Build wheel
         run: |
           pip install build
           python -m build --wheel
-          pip install dist/*.whl
+
+      - name: Repair wheel (macOS — bundle librdkafka into wheel)
+        if: runner.os == 'macOS'
+        run: |
+          pip install delocate
+          delocate-wheel dist/*.whl
+
+      - name: Install wheel
+        run: pip install dist/*.whl
 
       - name: Run unit tests
         run: |
