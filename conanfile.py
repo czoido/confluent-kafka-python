@@ -12,7 +12,7 @@ class ConfluentKafkaPythonConan(ConanFile):
         cmake_layout(self)
 
     def requirements(self):
-        self.requires("librdkafka/[>=2.0 <3]")
+        self.requires("librdkafka/2.14.0")
 
     def build(self):
         cmake = CMake(self)
