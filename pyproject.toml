@@ -239,6 +239,9 @@ known_first_party = ["confluent_kafka"]
 [tool.conan-py-build]
 extra-arguments = [
     "-o=librdkafka/*:shared=True",
+    "-o=librdkafka/*:ssl=True",
+    "-o=librdkafka/*:zlib=True",
+    "-o=librdkafka/*:zstd=True",
 ]
 
 [tool.conan-py-build.wheel]
