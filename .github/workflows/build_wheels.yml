@@ -77,7 +77,6 @@ jobs:
       matrix:
         os:
           - ubuntu-latest   # Linux x86_64 + arm64 (QEMU)
-          - macos-13        # macOS x86_64
           - macos-latest    # macOS arm64 (M-series)
           - windows-latest  # Windows x86_64
 
