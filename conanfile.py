@@ -4,7 +4,7 @@ from conan.tools.cmake import CMake, cmake_layout
 
 class ConfluentKafkaPythonConan(ConanFile):
     name = "confluent-kafka"
-    version = "2.14.2"
+    version = "2.14.0"
     settings = "os", "compiler", "build_type", "arch"
     generators = "CMakeToolchain", "CMakeDeps"
 
