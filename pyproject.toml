@@ -1,6 +1,6 @@
 [build-system]
-requires = [ "setuptools>=62", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["conan-py-build"]
+build-backend = "conan_py_build.build"
 
 [project]
 name = "confluent-kafka"
@@ -15,7 +15,148 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules"]
 readme = "README.md"
 requires-python = ">=3.8"
-dynamic = ["dependencies", "optional-dependencies"]
+dependencies = [
+    "typing-extensions; python_version < '3.11'",
+]
+
+[project.optional-dependencies]
+schemaregistry = [
+    "attrs>=21.2.0",
+    "cachetools>=5.5.0",
+    "certifi",
+    "httpx>=0.26",
+    "authlib>=1.0.0",
+]
+schema_registry = [
+    "attrs>=21.2.0",
+    "cachetools>=5.5.0",
+    "certifi",
+    "httpx>=0.26",
+    "authlib>=1.0.0",
+]
+avro = [
+    "fastavro>=1.5.4,<1.8.0; python_version == '3.7'",
+    "fastavro>=1.5.4,<2; python_version > '3.7'",
+    "requests",
+    "avro>=1.11.1,<2",
+    "attrs>=21.2.0",
+    "cachetools>=5.5.0",
+    "certifi",
+    "httpx>=0.26",
+    "authlib>=1.0.0",
+]
+json = [
+    "pyrsistent",
+    "jsonschema>=4.18.0",
+    "orjson>=3.10",
+    "attrs>=21.2.0",
+    "cachetools>=5.5.0",
+    "certifi",
+    "httpx>=0.26",
+    "authlib>=1.0.0",
+]
+protobuf = [
+    "googleapis-common-protos",
+    "protobuf",
+    "attrs>=21.2.0",
+    "cachetools>=5.5.0",
+    "certifi",
+    "httpx>=0.26",
+    "authlib>=1.0.0",
+]
+rules = [
+    "azure-identity",
+    "azure-keyvault-keys",
+    "boto3>=1.35",
+    "cel-python>=0.4.0",
+    "google-re2<1.1.20251105",
+    "google-auth",
+    "google-api-core",
+    "google-cloud-kms",
+    "hkdf==0.0.3",
+    "hvac",
+    "jsonata-python",
+    "pyyaml>=6.0.0",
+    "tink",
+    "attrs>=21.2.0",
+    "cachetools>=5.5.0",
+    "certifi",
+    "httpx>=0.26",
+    "authlib>=1.0.0",
+]
+tests = [
+    "urllib3<3",
+    "flake8",
+    "mypy",
+    "attrs",
+    "types-cachetools",
+    "types-requests",
+    "orjson",
+    "pytest",
+    "pytest-timeout",
+    "requests-mock",
+    "respx",
+    "pytest_cov",
+    "pluggy<1.6.0",
+    "pytest-asyncio",
+    "async-timeout",
+    "black>=24.0.0",
+    "isort>=5.13.0",
+    "attrs>=21.2.0",
+    "cachetools>=5.5.0",
+    "certifi",
+    "httpx>=0.26",
+    "authlib>=1.0.0",
+]
+docs = [
+    "sphinx",
+    "sphinx-rtd-theme",
+    "tomli; python_version < '3.11'",
+    "attrs>=21.2.0",
+    "cachetools>=5.5.0",
+    "certifi",
+    "httpx>=0.26",
+    "authlib>=1.0.0",
+]
+soaktest = [
+    "psutil",
+    "opentelemetry-distro",
+    "opentelemetry-exporter-otlp",
+]
+dev = [
+    "urllib3<3",
+    "flake8",
+    "mypy",
+    "attrs",
+    "types-cachetools",
+    "types-requests",
+    "orjson",
+    "pytest",
+    "pytest-timeout",
+    "requests-mock",
+    "respx",
+    "pytest_cov",
+    "pluggy<1.6.0",
+    "pytest-asyncio",
+    "async-timeout",
+    "black>=24.0.0",
+    "isort>=5.13.0",
+    "sphinx",
+    "sphinx-rtd-theme",
+    "tomli; python_version < '3.11'",
+    "fastavro>=1.5.4,<2; python_version > '3.7'",
+    "requests",
+    "avro>=1.11.1,<2",
+    "pyrsistent",
+    "jsonschema>=4.18.0",
+    "googleapis-common-protos",
+    "protobuf",
+    "attrs>=21.2.0",
+    "cachetools>=5.5.0",
+    "certifi",
+    "httpx>=0.26",
+    "authlib>=1.0.0",
+]
 
 [[project.authors]]
 name = "Confluent Inc."
@@ -95,52 +236,36 @@ skip_glob = [
 ]
 known_first_party = ["confluent_kafka"]
 
-[tool.setuptools]
-include-package-data = false
+[tool.conan-py-build]
+extra-arguments = [
+    "-o=librdkafka/*:shared=True",
+]
 
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements/requirements.txt"]}
-optional-dependencies.schemaregistry = { file = ["requirements/requirements-schemaregistry.txt"] }
-optional-dependencies.schema_registry = { file = ["requirements/requirements-schemaregistry.txt"] }
-optional-dependencies.rules = { file = ["requirements/requirements-rules.txt", "requirements/requirements-schemaregistry.txt"] }
-optional-dependencies.avro = { file = ["requirements/requirements-avro.txt", "requirements/requirements-schemaregistry.txt"] }
-optional-dependencies.json = { file = ["requirements/requirements-json.txt", "requirements/requirements-schemaregistry.txt"] }
-optional-dependencies.protobuf = { file = ["requirements/requirements-protobuf.txt", "requirements/requirements-schemaregistry.txt"] }
-optional-dependencies.dev = { file = [
-    "requirements/requirements-docs.txt",
-    "requirements/requirements-examples.txt",
-    "requirements/requirements-tests.txt",
-    "requirements/requirements-schemaregistry.txt",
-    "requirements/requirements-rules.txt",
-    "requirements/requirements-avro.txt",
-    "requirements/requirements-json.txt",
-    "requirements/requirements-protobuf.txt"] }
-optional-dependencies.docs = { file = [
-    "requirements/requirements-docs.txt",
-    "requirements/requirements-schemaregistry.txt",
-    "requirements/requirements-rules.txt",
-    "requirements/requirements-avro.txt",
-    "requirements/requirements-json.txt",
-    "requirements/requirements-protobuf.txt"] }
-optional-dependencies.tests = { file = [
-    "requirements/requirements-tests.txt",
-    "requirements/requirements-schemaregistry.txt",
-    "requirements/requirements-rules.txt",
-    "requirements/requirements-avro.txt",
-    "requirements/requirements-json.txt",
-    "requirements/requirements-protobuf.txt"] }
-optional-dependencies.examples = { file = ["requirements/requirements-examples.txt"] }
-optional-dependencies.soaktest = { file = ["requirements/requirements-soaktest.txt"] }
-optional-dependencies.all = { file = [
-    "requirements/requirements-soaktest.txt",
-    "requirements/requirements-docs.txt",
-    "requirements/requirements-examples.txt",
-    "requirements/requirements-tests.txt",
-    "requirements/requirements-schemaregistry.txt",
-    "requirements/requirements-rules.txt",
-    "requirements/requirements-avro.txt",
-    "requirements/requirements-json.txt",
-    "requirements/requirements-protobuf.txt"] }
+[tool.conan-py-build.wheel]
+packages = ["src/confluent_kafka"]
+
+[tool.conan-py-build.sdist]
+exclude = [".semaphore", ".github/workflows"]
+
+[tool.cibuildwheel]
+build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
+skip = ["*-musllinux*", "*-manylinux_i686", "*-win32"]
+# Install conan and detect default profile before each wheel build
+before-all = "pip install conan && conan profile detect --force"
+test-command = "python -c \"import confluent_kafka; print(confluent_kafka.version())\""
+
+[tool.cibuildwheel.linux]
+manylinux-x86_64-image = "manylinux_2_28"
+manylinux-aarch64-image = "manylinux_2_28"
+repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
+
+[tool.cibuildwheel.macos]
+environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
+repair-wheel-command = "MACOSX_DEPLOYMENT_TARGET=11.0 delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}"
+
+[tool.cibuildwheel.windows]
+before-all = "pip install conan delvewheel && conan profile detect --force"
+repair-wheel-command = 'delvewheel repair --add-path "build/.conan-libs" -w "{dest_dir}" "{wheel}"'
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
