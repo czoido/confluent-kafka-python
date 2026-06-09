@@ -1,11 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
 project(confluent_kafka_cimpl LANGUAGES C)
 
-# Prevent GitHub Actions' setup-python from redirecting CMake to the wrong Python
-# version. On Linux (Docker) these vars aren't inherited; on macOS/Windows they are.
-unset(ENV{Python3_ROOT_DIR})
-unset(ENV{Python_ROOT_DIR})
-set(Python3_FIND_VIRTUALENV FIRST)
+# Prefer non-framework Python on macOS so the active build-venv interpreter wins
+# over any system framework installation when no explicit ROOT_DIR hint is given.
+set(Python3_FIND_FRAMEWORK LAST)
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
 find_package(RdKafka CONFIG REQUIRED)
